@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#2c2826" />
+      <stop offset="100%" stop-color="#141211" />
+    </radialGradient>
+    <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8f9fa" />
+      <stop offset="20%" stop-color="#cfd2d6" />
+      <stop offset="40%" stop-color="#ffffff" />
+      <stop offset="65%" stop-color="#8a8d93" />
+      <stop offset="85%" stop-color="#e9ecef" />
+      <stop offset="100%" stop-color="#6c757d" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="800" fill="url(#bg)" />
+
+  <g transform="translate(400, 400)">
+    <!-- Shadow -->
+    <ellipse cx="10" cy="90" rx="190" ry="40" fill="#050505" opacity="0.6" filter="url(#glow)" />
+
+    <!-- Open Cuff Band -->
+    <path d="M -160,20 C -180,-100 -60,-170 0,-170 C 60,-170 180,-100 160,20 C 145,100 80,120 40,120" 
+          fill="none" stroke="url(#silver-grad)" stroke-width="32" stroke-linecap="round" />
+
+    <!-- Facet details (hammered texture simulation) -->
+    <path d="M -150,15 C -170,-95 -55,-165 0,-165 C 55,-165 170,-95 150,15" 
+          fill="none" stroke="#ffffff" stroke-width="4" opacity="0.6" stroke-dasharray="8,14,20,10" />
+
+    <circle cx="-160" cy="20" r="16" fill="url(#silver-grad)" />
+    <circle cx="40" cy="120" r="16" fill="url(#silver-grad)" />
+    
+    <!-- Highlights -->
+    <ellipse cx="-40" cy="-160" rx="45" ry="8" fill="#ffffff" opacity="0.75" />
+    <ellipse cx="120" cy="-60" rx="15" ry="30" transform="rotate(30, 120, -60)" fill="#ffffff" opacity="0.5" />
+  </g>
+
+  <text x="400" y="720" font-family="'Playfair Display', serif" font-size="20" letter-spacing="4" fill="#a89a8c" text-anchor="middle" opacity="0.8">AVELUNE ATELIER</text>
+  <text x="400" y="745" font-family="'Inter', sans-serif" font-size="12" letter-spacing="6" fill="#888" text-anchor="middle">HAND-HAMMERED STERLING CUFF</text>
+</svg>
+

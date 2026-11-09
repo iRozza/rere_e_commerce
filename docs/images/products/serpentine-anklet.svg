@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#211f1e" />
+      <stop offset="100%" stop-color="#111010" />
+    </radialGradient>
+    <linearGradient id="rope-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8e9094" />
+      <stop offset="30%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#b0b3b8" />
+      <stop offset="100%" stop-color="#55585d" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="800" fill="url(#bg)" />
+
+  <g transform="translate(400, 390)">
+    <!-- Serpentine twisted wave curve -->
+    <path d="M -260,-40 C -150,140 -50,-120 50,80 C 150,220 230,-60 270,10" 
+          fill="none" stroke="url(#rope-grad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Twisted segment pattern -->
+    <path d="M -260,-40 C -150,140 -50,-120 50,80 C 150,220 230,-60 270,10" 
+          fill="none" stroke="#ffffff" stroke-width="3" stroke-dasharray="6,8" stroke-linecap="round" opacity="0.8" />
+
+    <circle cx="-260" cy="-40" r="9" fill="#d9d9d9" />
+    <circle cx="270" cy="10" r="9" fill="#d9d9d9" />
+  </g>
+
+  <text x="400" y="720" font-family="'Playfair Display', serif" font-size="20" letter-spacing="4" fill="#a89a8c" text-anchor="middle" opacity="0.8">AVELUNE ATELIER</text>
+  <text x="400" y="745" font-family="'Inter', sans-serif" font-size="12" letter-spacing="6" fill="#888" text-anchor="middle">FRENCH ROPE TWISTED ANKLET</text>
+</svg>
+

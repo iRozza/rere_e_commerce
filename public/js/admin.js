@@ -264,7 +264,7 @@ const AdminUI = {
       shortDesc,
       description: shortDesc,
       materials,
-      image: '/images/products/herringbone-necklace.jpg', // fallback or user-selected
+      image: './images/products/herringbone-necklace.jpg', // fallback or user-selected
       badge: 'New Artisan Piece',
       featured: true
     };
@@ -281,3 +281,4 @@ const AdminUI = {
 };
 
 window.AdminUI = AdminUI;
+

@@ -662,3 +662,4 @@ window.showToast = function(message, type = 'info') {
 };
 
 window.App = App;
+

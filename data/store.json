@@ -14,10 +14,10 @@
       "stockCount": 13,
       "rating": 4.9,
       "reviewCount": 128,
-      "image": "/images/products/herringbone-necklace.jpg",
+      "image": "./images/products/herringbone-necklace.jpg",
       "gallery": [
-        "/images/products/herringbone-necklace.jpg",
-        "/images/products/herringbone-necklace.jpg"
+        "./images/products/herringbone-necklace.jpg",
+        "./images/products/herringbone-necklace.jpg"
       ],
       "shortDesc": "Silky, flexible 925 sterling silver ribbon links that drape flush against the collarbone like liquid mercury.",
       "description": "An ode to sleek modernism and effortless glamour. The L'Ombre Liquid Herringbone Choker is handcrafted using precision interlocking flat ribbon links that create an astonishingly fluid, mirror-shine finish. Designed to contour smoothly around the collarbone without twisting or catching.",
@@ -49,10 +49,10 @@
       "stockCount": 9,
       "rating": 5,
       "reviewCount": 94,
-      "image": "/images/products/butterfly-chevron-anklet.jpg",
+      "image": "./images/products/butterfly-chevron-anklet.jpg",
       "gallery": [
-        "/images/products/butterfly-chevron-anklet.jpg",
-        "/images/products/butterfly-chevron-anklet.jpg"
+        "./images/products/butterfly-chevron-anklet.jpg",
+        "./images/products/butterfly-chevron-anklet.jpg"
       ],
       "shortDesc": "Dual-strand architecture marrying sculpted chevron herringbone links with delicate satellite beads and a hand-cast butterfly charm.",
       "description": "Capturing the poetic movement of transformation, the Papillon Anklet showcases two complementary strands in one seamless piece. One strand features architectural chevron arrows, paired with a satellite bead chain culminating in an ethereal three-dimensional butterfly charm.",
@@ -85,10 +85,10 @@
       "stockCount": 18,
       "rating": 4.8,
       "reviewCount": 86,
-      "image": "/images/products/eclipse-disc-bracelet.jpg",
+      "image": "./images/products/eclipse-disc-bracelet.jpg",
       "gallery": [
-        "/images/products/eclipse-disc-bracelet.jpg",
-        "/images/products/eclipse-disc-bracelet.jpg"
+        "./images/products/eclipse-disc-bracelet.jpg",
+        "./images/products/eclipse-disc-bracelet.jpg"
       ],
       "shortDesc": "Smooth circular discs suspended between micro-polished ball beads catching ambient light with graceful subtlety.",
       "description": "The Éclipse Bracelet balances tactile beaded texture with three flat mirror-polished circular disc pendants that chime softly in motion. Engineered for comfortable all-day wear and stunning when stacked with cuffs or watchbands.",
@@ -121,10 +121,10 @@
       "stockCount": 6,
       "rating": 4.9,
       "reviewCount": 112,
-      "image": "/images/products/soleil-lune-beaded-bracelet.jpg",
+      "image": "./images/products/soleil-lune-beaded-bracelet.jpg",
       "gallery": [
-        "/images/products/soleil-lune-beaded-bracelet.jpg",
-        "/images/products/soleil-lune-beaded-bracelet.jpg"
+        "./images/products/soleil-lune-beaded-bracelet.jpg",
+        "./images/products/soleil-lune-beaded-bracelet.jpg"
       ],
       "shortDesc": "Artisanal half-and-half piece featuring vibrant yellow glass beads, protective evil eye, freshwater pearl, and smiling crescent moon charm.",
       "description": "A talisman of joy, protection, and celestial wonder. This asymmetric signature piece contrasts sunny yellow Japanese seed beads and an evil eye glass bead with a genuine natural freshwater pearl, continuing into an antique silver link chain with a smiling crescent moon talisman.",
@@ -157,9 +157,9 @@
       "stockCount": 11,
       "rating": 4.9,
       "reviewCount": 64,
-      "image": "/images/products/celeste-cuff.svg",
+      "image": "./images/products/celeste-cuff.svg",
       "gallery": [
-        "/images/products/celeste-cuff.svg"
+        "./images/products/celeste-cuff.svg"
       ],
       "shortDesc": "Sculptural open cuff hand-hammered to reflect dappled light like rippling water.",
       "description": "Forged on a jeweler's anvil, each Céleste cuff features thousands of individual light-catching facets that produce a soft organic glow. Malleable enough to gently adjust for a tailored wrist fit.",
@@ -190,9 +190,9 @@
       "stockCount": 8,
       "rating": 4.8,
       "reviewCount": 77,
-      "image": "/images/products/aura-pearl-choker.svg",
+      "image": "./images/products/aura-pearl-choker.svg",
       "gallery": [
-        "/images/products/aura-pearl-choker.svg"
+        "./images/products/aura-pearl-choker.svg"
       ],
       "shortDesc": "A luminous hand-selected natural baroque pearl floating on an ultra-fine 18k white gold vermeil chain.",
       "description": "Each baroque pearl is grown naturally and possesses its own singular contour, iridescent luster, and character. Suspended on a whisper-thin diamond-cut silver cable chain that catches light with subtle radiance.",
@@ -224,9 +224,9 @@
       "stockCount": 22,
       "rating": 4.7,
       "reviewCount": 53,
-      "image": "/images/products/serpentine-anklet.svg",
+      "image": "./images/products/serpentine-anklet.svg",
       "gallery": [
-        "/images/products/serpentine-anklet.svg"
+        "./images/products/serpentine-anklet.svg"
       ],
       "shortDesc": "Twisted French rope chain designed for effortless glint on sunlit strolls and evening wear.",
       "description": "Spun with tight diamond-cut helical twists, the Serpentine Anklet glimmers continuously from every perspective. Featherweight and smooth against skin, it never snags on delicate fabrics.",
@@ -257,9 +257,9 @@
       "stockCount": 5,
       "rating": 5,
       "reviewCount": 41,
-      "image": "/images/products/astral-starburst.svg",
+      "image": "./images/products/astral-starburst.svg",
       "gallery": [
-        "/images/products/astral-starburst.svg"
+        "./images/products/astral-starburst.svg"
       ],
       "shortDesc": "Intricately hand-engraved celestial compass talisman set with a shimmering central cubic zircon starlight.",
       "description": "An homage to antique maritime navigational pendants and celestial wanderers. Hand-etched starburst rays radiate outwards from a bezel-set faceted center stone, encased in an artisan coin rim.",
@@ -425,7 +425,7 @@
           "name": "L'Ombre Liquid Herringbone Choker",
           "price": 68,
           "quantity": 1,
-          "image": "/images/products/herringbone-necklace.jpg"
+          "image": "./images/products/herringbone-necklace.jpg"
         }
       ],
       "subtotal": 68,
@@ -460,14 +460,14 @@
           "name": "L'Ombre Liquid Herringbone Choker",
           "price": 68,
           "quantity": 1,
-          "image": "/images/products/herringbone-necklace.jpg"
+          "image": "./images/products/herringbone-necklace.jpg"
         },
         {
           "id": "prod-papillon-02",
           "name": "Papillon Dual-Layer Chevron & Bead Anklet",
           "price": 48,
           "quantity": 1,
-          "image": "/images/products/butterfly-chevron-anklet.jpg"
+          "image": "./images/products/butterfly-chevron-anklet.jpg"
         }
       ],
       "subtotal": 116,
@@ -537,7 +537,7 @@
           "name": "Soleil & Lune Evil Eye Artisan Beaded Bracelet",
           "price": 54,
           "quantity": 2,
-          "image": "/images/products/soleil-lune-beaded-bracelet.jpg"
+          "image": "./images/products/soleil-lune-beaded-bracelet.jpg"
         }
       ],
       "subtotal": 108,
@@ -607,14 +607,14 @@
           "name": "Éclipse Tri-Disc Beaded Bracelet",
           "price": 42,
           "quantity": 1,
-          "image": "/images/products/eclipse-disc-bracelet.jpg"
+          "image": "./images/products/eclipse-disc-bracelet.jpg"
         },
         {
           "id": "prod-astral-08",
           "name": "Astral Starburst Medallion Necklace",
           "price": 84,
           "quantity": 1,
-          "image": "/images/products/astral-starburst.svg"
+          "image": "./images/products/astral-starburst.svg"
         }
       ],
       "subtotal": 126,

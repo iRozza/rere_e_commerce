@@ -106,3 +106,4 @@ Then open your browser at:
 - `WELCOME20` — 20% discount on orders over $50
 - `FREESHIP` — 100% Free worldwide express shipping
 - `SILVER10` — 10% discount on sterling silver jewelry
+

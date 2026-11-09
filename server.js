@@ -322,3 +322,4 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`✨ AVELUNE Atelier eCommerce running at http://localhost:${PORT}`);
 });
+

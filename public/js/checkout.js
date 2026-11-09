@@ -239,7 +239,7 @@ const CheckoutUI = {
           name: 'Atelier Suede Anti-Tarnish Polishing Cloth',
           price: 6.0,
           quantity: 1,
-          image: '/images/products/herringbone-necklace.jpg'
+          image: './images/products/herringbone-necklace.jpg'
         });
       }
 
@@ -296,3 +296,4 @@ const CheckoutUI = {
 };
 
 window.CheckoutUI = CheckoutUI;
+
