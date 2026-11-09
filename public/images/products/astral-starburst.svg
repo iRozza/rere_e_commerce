@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#22201e" />
+      <stop offset="100%" stop-color="#121110" />
+    </radialGradient>
+    <radialGradient id="silver-coin" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#d4d7db" />
+      <stop offset="80%" stop-color="#9aa0a6" />
+      <stop offset="100%" stop-color="#5f6368" />
+    </radialGradient>
+    <linearGradient id="silver-chain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9aa0a6" />
+      <stop offset="50%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#70757a" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="800" fill="url(#bg)" />
+
+  <g transform="translate(400, 360)">
+    <!-- Chain suspended -->
+    <path d="M -180,-240 C -80,-80 -40,-20 0,0 C 40,-20 80,-80 180,-240" 
+          fill="none" stroke="url(#silver-chain)" stroke-width="4" stroke-dasharray="6,3" />
+
+    <!-- Medallion Coin Bail -->
+    <circle cx="0" cy="8" r="8" fill="none" stroke="#cfd2d6" stroke-width="4" />
+
+    <!-- Coin Body -->
+    <circle cx="0" cy="110" r="95" fill="url(#silver-coin)" filter="drop-shadow(0px 15px 25px rgba(0,0,0,0.6))" />
+    <!-- Coin Rim Beaded Border -->
+    <circle cx="0" cy="110" r="86" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="4,4" />
+    <circle cx="0" cy="110" r="78" fill="none" stroke="#e8eaed" stroke-width="1.5" />
+
+    <!-- Starburst Rays -->
+    <g transform="translate(0, 110)">
+      <!-- 8-point main starburst -->
+      <polygon points="0,-65 6,-18 45,-45 18,-6 65,0 18,6 45,45 6,18 0,65 -6,18 -45,45 -18,6 -65,0 -18,-6 -45,-45 -6,-18" fill="#ffffff" />
+      
+      <!-- Central gemstone setting -->
+      <circle cx="0" cy="0" r="14" fill="#3c4043" />
+      <circle cx="0" cy="0" r="10" fill="#ffffff" opacity="0.95" />
+      <circle cx="-3" cy="-3" r="3" fill="#e8f0fe" />
+    </g>
+  </g>
+
+  <text x="400" y="720" font-family="'Playfair Display', serif" font-size="20" letter-spacing="4" fill="#a89a8c" text-anchor="middle" opacity="0.8">AVELUNE ATELIER</text>
+  <text x="400" y="745" font-family="'Inter', sans-serif" font-size="12" letter-spacing="6" fill="#888" text-anchor="middle">ASTRAL STARBURST MEDALLION</text>
+</svg>

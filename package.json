@@ -1,0 +1,19 @@
+{
+  "name": "avelune-ecommerce",
+  "version": "1.0.0",
+  "description": "AVELUNE - Premium Artisanal Handcrafted Accessories & Jewelry eCommerce",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "type": "commonjs",
+  "keywords": [
+    "ecommerce",
+    "avelune",
+    "handmade-accessories",
+    "jewelry",
+    "fashion"
+  ],
+  "author": "AVELUNE Studio",
+  "license": "ISC"
+}
