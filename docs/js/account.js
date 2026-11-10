@@ -18,6 +18,14 @@ const AccountUI = {
         State.setUser(res.user, res.token);
         window.showToast(`Welcome back, ${res.user.name}`, 'success');
         this.render();
+      } else {
+        const message = res.message || 'Login failed. Please check your details.';
+        window.showToast(message, 'danger');
+        const errEl = document.getElementById('authError');
+        if (errEl) {
+          errEl.textContent = message;
+          errEl.style.display = 'block';
+        }
       }
     } catch (err) {
       window.showToast(err.message || 'Login failed', 'danger');
@@ -36,6 +44,14 @@ const AccountUI = {
         State.setUser(res.user, res.token);
         window.showToast(`Account created! Welcome to Avelune Atelier, ${res.user.name}`, 'success');
         this.render();
+      } else {
+        const message = res.message || 'Registration failed. Please review your details and try again.';
+        window.showToast(message, 'danger');
+        const errEl = document.getElementById('authRegisterError');
+        if (errEl) {
+          errEl.textContent = message;
+          errEl.style.display = 'block';
+        }
       }
     } catch (err) {
       window.showToast(err.message || 'Registration failed', 'danger');
@@ -76,15 +92,15 @@ const AccountUI = {
             <p style="font-size: 0.875rem; color: var(--color-text-muted);">Access your order history, tracking, saved addresses, and artisan wishlist.</p>
           </div>
 
-          <div id="authError" style="display: none; background: #fdf2f2; border: 1px solid #f8b4b4; color: var(--color-danger); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8125rem; margin-bottom: 1.25rem;"></div>
+          <div id="authError" role="alert" aria-live="assertive" style="display: none; background: #fdf2f2; border: 1px solid #f8b4b4; color: var(--color-danger); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8125rem; margin-bottom: 1.25rem;"></div>
 
           <form id="loginForm" onsubmit="event.preventDefault(); AccountUI.handleLoginSubmit();">
             <div class="form-group">
-              <label class="form-label">Email Address</label>
+              <label class="form-label" for="loginEmail">Email Address</label>
               <input type="email" id="loginEmail" class="form-input" placeholder="e.g. elena@avelune.com" required />
             </div>
             <div class="form-group">
-              <label class="form-label">Password</label>
+              <label class="form-label" for="loginPassword">Password</label>
               <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required />
             </div>
             <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Sign In</button>

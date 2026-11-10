@@ -4,17 +4,24 @@ const CheckoutUI = {
   selectedPayment: 'card',
   selectedShippingFee: 0,
   orderBumpAdded: false,
+  eventsBound: false,
 
   init() {
     this.bindEvents();
+    if (!this.cartSummaryListenerBound) {
+      State.on('cart:updated', () => this.renderSummary());
+      this.cartSummaryListenerBound = true;
+    }
     this.renderSummary();
   },
 
   bindEvents() {
+    if (this.eventsBound) return;
+    this.eventsBound = true;
     // Payment method radio tabs
-    document.querySelectorAll('.payment-option-card').forEach(card => {
+    document.querySelectorAll('.payment-option-card[data-method]').forEach(card => {
       card.addEventListener('click', (e) => {
-        document.querySelectorAll('.payment-option-card').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.payment-option-card[data-method]').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         const method = card.dataset.method;
         this.selectedPayment = method;
@@ -51,7 +58,10 @@ const CheckoutUI = {
     // Shipping radio options
     document.querySelectorAll('input[name="shippingOption"]').forEach(radio => {
       radio.addEventListener('change', (e) => {
-        this.selectedShippingFee = parseFloat(e.target.value) || 0;
+        this.selectedShippingFee = e.target.dataset.shippingType === 'express' ? 14.99 : 0;
+        document.querySelectorAll('input[name="shippingOption"]').forEach(option => {
+          option.closest('.payment-option-card')?.classList.toggle('selected', option === e.target);
+        });
         this.renderSummary();
       });
     });
@@ -99,8 +109,36 @@ const CheckoutUI = {
 
     if (!container) return;
 
+    const subtotal = State.getCartSubtotal() + (this.orderBumpAdded ? 6.0 : 0);
+    if (State.appliedCoupon && subtotal < (State.appliedCoupon.minSpend || 0)) {
+      const code = State.appliedCoupon.code;
+      State.removeCoupon();
+      const msg = document.getElementById('couponFeedbackMsg');
+      if (msg) {
+        msg.style.color = 'var(--color-danger)';
+        msg.textContent = `Promo code ${code} was removed because the order no longer meets its minimum spend.`;
+      }
+    }
+    const standardRadio = document.querySelector('input[name="shippingOption"][data-shipping-type="standard"]');
+    const standardLabel = standardRadio?.closest('.payment-option-card');
+    const standardPrice = standardLabel?.lastElementChild;
+    const standardFee = this.getStandardShippingFee(subtotal);
+    if (standardRadio) standardRadio.value = String(standardFee);
+    if (standardPrice) {
+      standardPrice.textContent = standardFee === 0 ? 'FREE' : State.formatPrice(standardFee);
+      standardPrice.style.color = standardFee === 0 ? 'var(--color-success)' : '';
+    }
+    const selectedRadio = document.querySelector('input[name="shippingOption"]:checked');
+    this.selectedShippingFee = selectedRadio?.dataset.shippingType === 'express' ? 14.99 : standardFee;
+
     if (State.cart.length === 0) {
       container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 0.875rem;">Your bag is empty. Please add items to checkout.</p>`;
+      if (subtotalEl) subtotalEl.textContent = State.formatPrice(0);
+      if (discountRow) discountRow.style.display = 'none';
+      if (discountEl) discountEl.textContent = State.formatPrice(0);
+      if (shippingEl) shippingEl.textContent = 'FREE';
+      if (taxEl) taxEl.textContent = State.formatPrice(0);
+      if (totalEl) totalEl.textContent = State.formatPrice(0);
       return;
     }
 
@@ -120,16 +158,8 @@ const CheckoutUI = {
       </div>
     `).join('');
 
-    let subtotal = State.getCartSubtotal();
-    if (this.orderBumpAdded) {
-      subtotal += 6.0; // Anti-tarnish polishing cloth
-    }
-
-    const discount = State.getCartDiscount();
-    let shipping = this.selectedShippingFee;
-    if (subtotal >= 50 || (State.appliedCoupon && State.appliedCoupon.freeShipping)) {
-      if (shipping === 0) shipping = 0; // standard is free
-    }
+    const discount = this.getCheckoutDiscount(subtotal);
+    const shipping = State.appliedCoupon?.freeShipping ? 0 : this.selectedShippingFee;
 
     const taxableAmount = Math.max(0, subtotal - discount);
     const tax = taxableAmount * 0.08;
@@ -161,12 +191,23 @@ const CheckoutUI = {
     try {
       const res = await API.validateCoupon(input.value.trim());
       if (res.success && res.coupon) {
+        const subtotal = State.getCartSubtotal() + (this.orderBumpAdded ? 6 : 0);
+        if (subtotal < (res.coupon.minSpend || 0)) {
+          if (msg) {
+            msg.style.color = 'var(--color-danger)';
+            msg.textContent = `This code requires a minimum order of ${State.formatPrice(res.coupon.minSpend)}.`;
+          }
+          return;
+        }
         State.applyCoupon(res.coupon);
         if (msg) {
           msg.style.color = 'var(--color-success)';
           msg.textContent = `✓ Promo code "${res.coupon.code}" applied: ${res.coupon.description}!`;
         }
         this.renderSummary();
+      } else if (msg) {
+        msg.style.color = 'var(--color-danger)';
+        msg.textContent = res.message || 'Invalid promotional code.';
       }
     } catch (err) {
       if (msg) {
@@ -190,7 +231,8 @@ const CheckoutUI = {
     const country = document.getElementById('checkoutCountry')?.value.trim() || 'United States';
     const phone = document.getElementById('checkoutPhone')?.value.trim() || '';
 
-    if (!email || !name || !street || !city || !postalCode) {
+    const emailField = document.getElementById('checkoutEmail');
+    if (!email || !name || !street || !city || !postalCode || !emailField?.checkValidity()) {
       if (errorAlert) {
         errorAlert.textContent = 'Please complete all required customer & shipping address fields.';
         errorAlert.style.display = 'block';
@@ -200,11 +242,18 @@ const CheckoutUI = {
     }
 
     if (this.selectedPayment === 'card') {
-      const ccNum = document.getElementById('ccNumber')?.value.replace(/\s+/g, '');
+      const ccNum = document.getElementById('ccNumber')?.value.replace(/\D/g, '');
       const ccExp = document.getElementById('ccExp')?.value.trim();
       const ccCvc = document.getElementById('ccCvc')?.value.trim();
+      const expMatch = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(ccExp || '');
+      const expirationIsFuture = expMatch && (() => {
+        const month = Number(expMatch[1]);
+        const year = 2000 + Number(expMatch[2]);
+        const now = new Date();
+        return year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth() + 1);
+      })();
 
-      if (!ccNum || ccNum.length < 15 || !ccExp || !ccCvc) {
+      if (!ccNum || ccNum.length < 15 || ccNum.length > 19 || !this.passesLuhnCheck(ccNum) || !expirationIsFuture || !/^\d{3,4}$/.test(ccCvc || '')) {
         if (errorAlert) {
           errorAlert.textContent = 'Please enter a valid credit card number, expiration date, and security code.';
           errorAlert.style.display = 'block';
@@ -244,11 +293,8 @@ const CheckoutUI = {
       }
 
       let subtotal = State.getCartSubtotal() + (this.orderBumpAdded ? 6.0 : 0);
-      let discount = State.getCartDiscount();
-      let shipping = this.selectedShippingFee;
-      if (subtotal >= 50 || (State.appliedCoupon && State.appliedCoupon.freeShipping)) {
-        if (shipping === 0) shipping = 0;
-      }
+      let discount = this.getCheckoutDiscount(subtotal);
+      let shipping = State.appliedCoupon?.freeShipping ? 0 : this.selectedShippingFee;
       let tax = (subtotal - discount) * 0.08;
       let total = subtotal - discount + shipping + tax;
 
@@ -292,6 +338,29 @@ const CheckoutUI = {
         submitBtn.innerHTML = 'Complete Order';
       }
     }
+  },
+  getStandardShippingFee(subtotal) {
+    if (subtotal <= 0 || subtotal >= 50 || State.appliedCoupon?.freeShipping) return 0;
+    return 4.99;
+  },
+  getCheckoutDiscount(subtotal) {
+    const coupon = State.appliedCoupon;
+    if (!coupon || subtotal < (coupon.minSpend || 0) || !coupon.discountPercent) return 0;
+    return subtotal * (coupon.discountPercent / 100);
+  },
+  passesLuhnCheck(cardNumber) {
+    let sum = 0;
+    let doubleDigit = false;
+    for (let i = cardNumber.length - 1; i >= 0; i -= 1) {
+      let digit = Number(cardNumber[i]);
+      if (doubleDigit) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      doubleDigit = !doubleDigit;
+    }
+    return sum % 10 === 0;
   }
 };
 

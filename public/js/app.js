@@ -1,10 +1,102 @@
 // AVELUNE Atelier - Main Router & Page Controllers
+const OverlayFocus = {
+  stack: [],
+  previousOverflow: '',
+  listenersBound: false,
+
+  init() {
+    if (this.listenersBound) return;
+    this.listenersBound = true;
+    document.addEventListener('keydown', event => {
+      const entry = this.stack[this.stack.length - 1];
+      if (!entry) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        entry.onEscape ? entry.onEscape() : this.close(entry.panel);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = this.getFocusable(entry.panel);
+      if (!items.length) {
+        event.preventDefault();
+        entry.panel.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !entry.panel.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !entry.panel.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+    document.addEventListener('focusin', event => {
+      const entry = this.stack[this.stack.length - 1];
+      if (entry && !entry.panel.contains(event.target)) {
+        (this.getFocusable(entry.panel)[0] || entry.panel).focus();
+      }
+    });
+  },
+
+  getFocusable(panel) {
+    return [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter(element => element.getClientRects().length > 0 && !element.closest('[hidden]'));
+  },
+
+  getReturnFocus(panel) {
+    return this.stack.find(entry => entry.panel === panel)?.returnFocus || null;
+  },
+
+  open(panel, { focusSelector, onEscape, returnFocus = document.activeElement } = {}) {
+    if (!panel) return;
+    this.init();
+    if (!this.stack.length) this.previousOverflow = document.body.style.overflow;
+    const prior = this.stack.findIndex(entry => entry.panel === panel);
+    if (prior >= 0) this.stack.splice(prior, 1);
+    this.stack.push({ panel, returnFocus, onEscape });
+    panel.setAttribute('aria-hidden', 'false');
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    const target = (focusSelector && panel.querySelector(focusSelector)) || this.getFocusable(panel)[0] || panel;
+    if (!panel.hasAttribute('tabindex')) panel.setAttribute('tabindex', '-1');
+    target.focus();
+    const focusAfterOpen = () => {
+      const stillTop = this.stack[this.stack.length - 1]?.panel === panel;
+      const focusWasNotMoved = document.activeElement === panel || document.activeElement === returnFocus;
+      if (stillTop && focusWasNotMoved) target.focus();
+    };
+    requestAnimationFrame(focusAfterOpen);
+    window.setTimeout(focusAfterOpen, 400);
+  },
+
+  close(panel, { restoreFocus = true } = {}) {
+    if (!panel) return;
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    const index = this.stack.findIndex(entry => entry.panel === panel);
+    const [entry] = index >= 0 ? this.stack.splice(index, 1) : [];
+    if (this.stack.length) {
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+    document.body.style.overflow = this.previousOverflow;
+    if (restoreFocus && entry?.returnFocus?.isConnected && entry.returnFocus.getClientRects().length > 0) {
+      entry.returnFocus.focus();
+    }
+  }
+};
+
+window.OverlayFocus = OverlayFocus;
+
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
 });
 
 const App = {
   productsCache: [],
+  searchProductsCache: null,
 
   init() {
     this.bindGlobalEvents();
@@ -62,38 +154,101 @@ const App = {
     const mobileMenuBtn = document.getElementById('mobileMenuToggle');
     const mobileNavDrawer = document.getElementById('mobileNavDrawer');
     const closeMobileNav = document.getElementById('closeMobileNav');
+    const closeMobileMenu = () => {
+      OverlayFocus.close(mobileNavDrawer);
+      mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+    };
 
     if (mobileMenuBtn && mobileNavDrawer) {
       mobileMenuBtn.addEventListener('click', () => {
-        const isOpen = mobileNavDrawer.classList.toggle('open');
+        const isOpen = !mobileNavDrawer.classList.contains('open');
+        if (isOpen) {
+          OverlayFocus.open(mobileNavDrawer, { focusSelector: '#closeMobileNav', onEscape: closeMobileMenu });
+        } else {
+          closeMobileMenu();
+        }
         mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-        document.body.style.overflow = isOpen ? 'hidden' : '';
       });
     }
     if (closeMobileNav && mobileNavDrawer) {
-      closeMobileNav.addEventListener('click', () => {
-        mobileNavDrawer.classList.remove('open');
-        mobileMenuBtn?.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      });
+      closeMobileNav.addEventListener('click', closeMobileMenu);
     }
     if (mobileNavDrawer) {
       mobileNavDrawer.querySelectorAll('a[href^="#/"]').forEach(link => {
-        link.addEventListener('click', () => {
-          mobileNavDrawer.classList.remove('open');
-          mobileMenuBtn?.setAttribute('aria-expanded', 'false');
-          document.body.style.overflow = '';
-        });
+        link.addEventListener('click', closeMobileMenu);
       });
     }
+
+    document.getElementById('addProductModal')?.addEventListener('click', event => {
+      if (event.target.id === 'addProductModal') AdminUI.closeAddProductModal();
+    });
+    document.getElementById('reviewModal')?.addEventListener('click', event => {
+      if (event.target.id === 'reviewModal') this.closeReviewModal();
+    });
+
+    // Header search overlay
+    const searchToggle = document.getElementById('headerSearchToggle');
+    const searchOverlay = document.getElementById('searchOverlay');
+    const searchInput = document.getElementById('headerSearchInput');
+    const searchClose = document.getElementById('closeSearchOverlay');
+    const closeSearch = () => {
+      OverlayFocus.close(searchOverlay);
+      searchToggle?.setAttribute('aria-expanded', 'false');
+    };
+
+    if (searchToggle && searchOverlay && searchInput) {
+      searchToggle.addEventListener('click', () => {
+        OverlayFocus.open(searchOverlay, { focusSelector: '#headerSearchInput', onEscape: closeSearch, returnFocus: searchToggle });
+        searchToggle.setAttribute('aria-expanded', 'true');
+        this.renderHeaderSearchResults('');
+      });
+      searchClose?.addEventListener('click', closeSearch);
+      searchOverlay.addEventListener('click', e => {
+        if (e.target === searchOverlay) closeSearch();
+      });
+      searchInput.addEventListener('input', () => this.renderHeaderSearchResults(searchInput.value));
+      searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          searchOverlay.querySelector('.search-result-card')?.click();
+        }
+      });
+    }
+
+    // Theme preference
+    const themeToggle = document.getElementById('themeToggleBtn');
+    const applyTheme = isDark => {
+      document.body.classList.toggle('dark-mode', isDark);
+      themeToggle?.setAttribute('aria-pressed', String(isDark));
+      const moonIcon = document.getElementById('themeIconMoon');
+      const sunIcon = document.getElementById('themeIconSun');
+      if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+      if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+    };
+
+    let savedTheme = 'light';
+    try {
+      savedTheme = window.localStorage.getItem('avelune_theme') || 'light';
+    } catch (err) {
+      // The theme still works for this session if storage is unavailable.
+    }
+    applyTheme(savedTheme === 'dark');
+    themeToggle?.addEventListener('click', () => {
+      const isDark = !document.body.classList.contains('dark-mode');
+      applyTheme(isDark);
+      try {
+        window.localStorage.setItem('avelune_theme', isDark ? 'dark' : 'light');
+      } catch (err) {
+        // Ignore storage restrictions; the visual toggle remains active.
+      }
+    });
 
     // Quick View Close
     const qvBackdrop = document.getElementById('quickViewModal');
     const qvClose = document.getElementById('closeQuickView');
     if (qvClose && qvBackdrop) {
-      qvClose.addEventListener('click', () => qvBackdrop.classList.remove('open'));
+      qvClose.addEventListener('click', () => this.closeQuickView());
       qvBackdrop.addEventListener('click', (e) => {
-        if (e.target === qvBackdrop) qvBackdrop.classList.remove('open');
+        if (e.target === qvBackdrop) this.closeQuickView();
       });
     }
 
@@ -109,13 +264,74 @@ const App = {
             window.showToast('Welcome to the Atelier! Use code AVELUNE15 for 15% off.', 'success');
             input.value = '';
           } catch (err) {
-            window.showToast('Newsletter subscription registered!', 'success');
+            window.showToast(err.message || 'Unable to subscribe right now. Please try again.', 'danger');
           }
         }
       });
     }
 
     this.updateWishlistCount();
+  },
+
+  async renderHeaderSearchResults(query) {
+    const results = document.getElementById('headerSearchResults');
+    if (!results) return;
+
+    const term = query.trim().toLocaleLowerCase();
+    results.replaceChildren();
+    if (!term) {
+      const hint = document.createElement('p');
+      hint.className = 'search-results-message';
+      hint.textContent = 'Start typing to find a handcrafted piece.';
+      results.appendChild(hint);
+      return;
+    }
+
+    if (!this.searchProductsCache) {
+      try {
+        const response = await API.getProducts();
+        this.searchProductsCache = response.success ? response.products : this.productsCache;
+      } catch (err) {
+        this.searchProductsCache = this.productsCache;
+      }
+    }
+
+    const matches = (this.searchProductsCache || []).filter(product => {
+      const searchable = [product.name, product.category, product.shortDesc, ...(product.tags || [])]
+        .filter(Boolean).join(' ').toLocaleLowerCase();
+      return searchable.includes(term);
+    }).slice(0, 8);
+
+    if (matches.length === 0) {
+      const message = document.createElement('p');
+      message.className = 'search-results-message';
+      message.textContent = 'No pieces found. Try a different search.';
+      results.appendChild(message);
+      return;
+    }
+
+    matches.forEach(product => {
+      const link = document.createElement('a');
+      link.className = 'search-result-card';
+      link.href = `#/product/${encodeURIComponent(product.slug || product.id)}`;
+      const image = document.createElement('img');
+      image.src = product.image;
+      image.alt = '';
+      const copy = document.createElement('span');
+      copy.className = 'search-result-copy';
+      const title = document.createElement('span');
+      title.className = 'search-result-title';
+      title.textContent = product.name;
+      const details = document.createElement('small');
+      details.textContent = `${product.category} · ${State.formatPrice(product.price)}`;
+      copy.append(title, details);
+      link.append(image, copy);
+      link.addEventListener('click', () => {
+        OverlayFocus.close(document.getElementById('searchOverlay'));
+        document.getElementById('headerSearchToggle')?.setAttribute('aria-expanded', 'false');
+      });
+      results.appendChild(link);
+    });
   },
 
   updateWishlistCount() {
@@ -144,7 +360,10 @@ const App = {
 
     // Close mobile nav if open
     const mobileNavDrawer = document.getElementById('mobileNavDrawer');
-    if (mobileNavDrawer) mobileNavDrawer.classList.remove('open');
+    if (mobileNavDrawer?.classList.contains('open')) {
+      OverlayFocus.close(mobileNavDrawer, { restoreFocus: false });
+      document.getElementById('mobileMenuToggle')?.setAttribute('aria-expanded', 'false');
+    }
 
     // Route matching
     if (hash === '#/' || hash === '') {
@@ -365,6 +584,13 @@ const App = {
       }
 
       const p = res.product;
+      const cachedProductIndex = this.productsCache.findIndex(product => product.id === p.id);
+      if (cachedProductIndex === -1) {
+        this.productsCache.push(p);
+      } else {
+        this.productsCache[cachedProductIndex] = p;
+      }
+
       const reviewsRes = await API.getReviews(p.id);
       const reviews = reviewsRes.reviews || [];
 
@@ -387,9 +613,9 @@ const App = {
             </div>
             <div class="pdp-thumbs">
               ${(p.gallery || [p.image]).map((img, i) => `
-                <div class="pdp-thumb ${i === 0 ? 'active' : ''}" onclick="document.getElementById('pdpMainImg').src='${img}'; document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active')); this.classList.add('active');">
+                <button type="button" class="pdp-thumb ${i === 0 ? 'active' : ''}" aria-label="View ${p.name} image ${i + 1}" aria-pressed="${i === 0}" onclick="document.getElementById('pdpMainImg').src='${img}'; document.querySelectorAll('.pdp-thumb').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-pressed', 'false'); }); this.classList.add('active'); this.setAttribute('aria-pressed', 'true');">
                   <img src="${img}" alt="${p.name} thumbnail" />
-                </div>
+                </button>
               `).join('')}
             </div>
           </div>
@@ -545,7 +771,7 @@ const App = {
     const content = document.getElementById('quickViewContent');
     if (!modal || !content) return;
 
-    modal.classList.add('open');
+    OverlayFocus.open(modal, { focusSelector: '#closeQuickView', onEscape: () => this.closeQuickView() });
     content.innerHTML = `<div style="text-align: center; padding: 3rem;"><div class="animate-spin" style="display: inline-block; width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%;"></div></div>`;
 
     try {
@@ -569,7 +795,7 @@ const App = {
                 <strong>Materials:</strong> ${p.materials}
               </div>
               <div style="margin-top: auto; display: flex; gap: 0.75rem;">
-                <button class="btn btn-primary btn-block" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="State.addToCart({ id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, image: '${p.image}', category: '${p.category}', stockCount: ${p.stockCount} }); document.getElementById('quickViewModal').classList.remove('open'); CartUI.openDrawer();">
+                <button class="btn btn-primary btn-block" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="App.addQuickViewToBag({ id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, image: '${p.image}', category: '${p.category}', stockCount: ${p.stockCount} });">
                   Add to Atelier Bag
                 </button>
               </div>
@@ -580,6 +806,18 @@ const App = {
     } catch (e) {
       console.error(e);
     }
+  },
+
+  closeQuickView(options = {}) {
+    OverlayFocus.close(document.getElementById('quickViewModal'), options);
+  },
+
+  addQuickViewToBag(product) {
+    const opener = OverlayFocus.getReturnFocus(document.getElementById('quickViewModal'));
+    if (!State.addToCart(product)) return;
+    this.closeQuickView({ restoreFocus: false });
+    CartUI.openDrawer(opener);
+    window.showToast(`Added "${product.name}" to bag`, 'success');
   },
 
   // RENDER ORDER CONFIRMATION
@@ -639,13 +877,12 @@ const App = {
     const inputId = document.getElementById('reviewProductId');
     if (modal && inputId) {
       inputId.value = productId;
-      modal.classList.add('open');
+      OverlayFocus.open(modal, { focusSelector: '#reviewAuthor', onEscape: () => this.closeReviewModal() });
     }
   },
 
-  closeReviewModal() {
-    const modal = document.getElementById('reviewModal');
-    if (modal) modal.classList.remove('open');
+  closeReviewModal(options = {}) {
+    OverlayFocus.close(document.getElementById('reviewModal'), options);
   },
 
   async handleReviewSubmit(e) {
@@ -659,8 +896,14 @@ const App = {
     try {
       await API.addReview({ productId, author, rating, title, comment });
       window.showToast('Thank you! Your verified collector review is published.', 'success');
+      const returnFocus = OverlayFocus.getReturnFocus(document.getElementById('reviewModal'));
       this.closeReviewModal();
-      this.renderPDP(productId);
+      await this.renderPDP(productId);
+      const heading = document.querySelector('#pdpContent h1');
+      if (heading && (document.activeElement === returnFocus || document.activeElement === document.body)) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
     } catch (err) {
       window.showToast('Could not submit review', 'danger');
     }

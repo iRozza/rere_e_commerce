@@ -1,17 +1,30 @@
 // AVELUNE Atelier Admin Dashboard Component
 const AdminUI = {
   currentTab: 'orders',
+  renderGeneration: 0,
+  focusRevision: 0,
+  focusTrackingBound: false,
 
   async init() {
+    if (!this.focusTrackingBound) {
+      document.addEventListener('focusin', () => { this.focusRevision += 1; });
+      this.focusTrackingBound = true;
+    }
     this.render();
   },
 
-  setTab(tab) {
+  async setTab(tab, trigger) {
+    const shouldRestoreFocus = trigger === document.activeElement;
+    const focusRevision = this.focusRevision;
     this.currentTab = tab;
-    this.render();
+    await this.render();
+    if (shouldRestoreFocus && this.currentTab === tab && focusRevision === this.focusRevision) {
+      document.querySelector(`[data-admin-tab="${tab}"]`)?.focus();
+    }
   },
 
   async render() {
+    const renderGeneration = ++this.renderGeneration;
     const container = document.getElementById('adminViewContainer');
     if (!container) return;
 
@@ -48,6 +61,8 @@ const AdminUI = {
     } catch (err) {
       console.error('Admin data load err:', err);
     }
+
+    if (renderGeneration !== this.renderGeneration) return;
 
     container.innerHTML = `
       <div class="admin-header">
@@ -90,12 +105,12 @@ const AdminUI = {
 
       <!-- Tabbed Sections -->
       <div class="admin-tabs">
-        <div class="admin-tab ${this.currentTab === 'orders' ? 'active' : ''}" onclick="AdminUI.setTab('orders')">
+        <button type="button" class="admin-tab ${this.currentTab === 'orders' ? 'active' : ''}" data-admin-tab="orders" aria-pressed="${this.currentTab === 'orders'}" onclick="AdminUI.setTab('orders', this)">
           📦 Client Orders (${orders.length})
-        </div>
-        <div class="admin-tab ${this.currentTab === 'products' ? 'active' : ''}" onclick="AdminUI.setTab('products')">
+        </button>
+        <button type="button" class="admin-tab ${this.currentTab === 'products' ? 'active' : ''}" data-admin-tab="products" aria-pressed="${this.currentTab === 'products'}" onclick="AdminUI.setTab('products', this)">
           💍 Product Inventory (${products.length})
-        </div>
+        </button>
       </div>
 
       <div>
@@ -139,7 +154,7 @@ const AdminUI = {
                 <td><strong>${State.formatPrice(o.total)}</strong></td>
                 <td><span style="font-size: 0.75rem;">${o.paymentStatus} (${o.paymentMethod})</span></td>
                 <td>
-                  <select onchange="AdminUI.handleStatusChange('${o.id}', this.value)" style="padding: 0.35rem 0.6rem; border-radius: 4px; border: 1px solid var(--color-border); font-size: 0.8125rem;">
+                  <select aria-label="Fulfillment status for order ${o.id}" onchange="AdminUI.handleStatusChange('${o.id}', this.value)" style="padding: 0.35rem 0.6rem; border-radius: 4px; border: 1px solid var(--color-border); font-size: 0.8125rem;">
                     <option value="Handcrafting" ${o.fulfillmentStatus === 'Handcrafting' ? 'selected' : ''}>Handcrafting</option>
                     <option value="Shipped" ${o.fulfillmentStatus === 'Shipped' ? 'selected' : ''}>Shipped</option>
                     <option value="Delivered" ${o.fulfillmentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
@@ -183,7 +198,7 @@ const AdminUI = {
                 <td>${p.category}</td>
                 <td>${State.formatPrice(p.price)}</td>
                 <td>
-                  <input type="number" value="${p.stockCount}" min="0" max="999" style="width: 60px; padding: 0.25rem; font-size: 0.8125rem; border: 1px solid var(--color-border); border-radius: 4px;" onchange="AdminUI.handleStockUpdate('${p.id}', this.value)" />
+                  <input type="number" value="${p.stockCount}" min="0" max="999" aria-label="Stock count for ${p.name}" style="width: 60px; padding: 0.25rem; font-size: 0.8125rem; border: 1px solid var(--color-border); border-radius: 4px;" onchange="AdminUI.handleStockUpdate('${p.id}', this.value)" />
                 </td>
                 <td>★ ${p.rating} (${p.reviewCount})</td>
                 <td>
@@ -237,12 +252,11 @@ const AdminUI = {
 
   openAddProductModal() {
     const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.add('open');
+    if (modal) OverlayFocus.open(modal, { focusSelector: '#newProdName', onEscape: () => this.closeAddProductModal() });
   },
 
-  closeAddProductModal() {
-    const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.remove('open');
+  closeAddProductModal(options = {}) {
+    OverlayFocus.close(document.getElementById('addProductModal'), options);
   },
 
   async handleAddProductSubmit(event) {
@@ -272,8 +286,14 @@ const AdminUI = {
     try {
       await API.addProduct(newProd);
       window.showToast(`"${name}" added to catalog!`, 'success');
+      const returnFocus = OverlayFocus.getReturnFocus(document.getElementById('addProductModal'));
       this.closeAddProductModal();
-      this.render();
+      await this.render();
+      const heading = document.querySelector('#adminViewContainer .admin-header h1');
+      if (heading && (document.activeElement === returnFocus || document.activeElement === document.body)) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
     } catch (err) {
       window.showToast('Failed to add product: ' + err.message, 'danger');
     }

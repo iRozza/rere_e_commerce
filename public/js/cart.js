@@ -27,20 +27,18 @@ const CartUI = {
     this.updateHeaderBadge();
   },
 
-  openDrawer() {
+  openDrawer(returnFocus) {
     if (this.drawer && this.backdrop) {
       this.renderDrawer();
-      this.drawer.classList.add('open');
+      OverlayFocus.open(this.drawer, { focusSelector: '#closeCartDrawer', onEscape: () => this.closeDrawer(), returnFocus: returnFocus || document.activeElement });
       this.backdrop.classList.add('open');
-      document.body.style.overflow = 'hidden';
     }
   },
 
   closeDrawer() {
     if (this.drawer && this.backdrop) {
-      this.drawer.classList.remove('open');
+      OverlayFocus.close(this.drawer);
       this.backdrop.classList.remove('open');
-      document.body.style.overflow = '';
     }
   },
 
