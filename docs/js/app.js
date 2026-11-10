@@ -32,10 +32,20 @@ const App = {
   bindGlobalEvents() {
     // Currency Selector
     const currPicker = document.getElementById('currencySelector');
+    const mobileCurrPicker = document.getElementById('mobileCurrencySelector');
     if (currPicker) {
       currPicker.value = State.activeCurrency;
       currPicker.addEventListener('change', (e) => {
         State.setCurrency(e.target.value);
+        if (mobileCurrPicker) mobileCurrPicker.value = e.target.value;
+      });
+    }
+
+    if (mobileCurrPicker) {
+      mobileCurrPicker.value = State.activeCurrency;
+      mobileCurrPicker.addEventListener('change', (e) => {
+        State.setCurrency(e.target.value);
+        if (currPicker) currPicker.value = e.target.value;
       });
     }
 
@@ -55,12 +65,25 @@ const App = {
 
     if (mobileMenuBtn && mobileNavDrawer) {
       mobileMenuBtn.addEventListener('click', () => {
-        mobileNavDrawer.classList.toggle('open');
+        const isOpen = mobileNavDrawer.classList.toggle('open');
+        mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+        document.body.style.overflow = isOpen ? 'hidden' : '';
       });
     }
     if (closeMobileNav && mobileNavDrawer) {
       closeMobileNav.addEventListener('click', () => {
         mobileNavDrawer.classList.remove('open');
+        mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    }
+    if (mobileNavDrawer) {
+      mobileNavDrawer.querySelectorAll('a[href^="#/"]').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileNavDrawer.classList.remove('open');
+          mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
       });
     }
 
@@ -309,7 +332,7 @@ const App = {
             <span class="product-price">${State.formatPrice(product.price)}</span>
             ${product.compareAtPrice ? `<span class="product-compare-price">${State.formatPrice(product.compareAtPrice)}</span>` : ''}
           </div>
-          <button class="product-add-cart-btn" onclick="State.addToCart({ id: '${product.id}', name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}', category: '${product.category}' }); CartUI.openDrawer();">
+          <button class="product-add-cart-btn" ${product.stockCount <= 0 ? 'disabled' : ''} onclick="State.addToCart({ id: '${product.id}', name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}', category: '${product.category}', stockCount: ${product.stockCount} }); CartUI.openDrawer();">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
               <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -390,19 +413,19 @@ const App = {
 
             <div class="stock-alert">
               <span class="stock-dot"></span>
-              <span>In Atelier Stock • Only <strong>${p.stockCount} handcrafted pieces</strong> remaining in this batch</span>
+              <span>${p.stockCount > 0 ? `In Atelier Stock • Only <strong>${p.stockCount} handcrafted pieces</strong> remaining in this batch` : 'Currently sold out'}</span>
             </div>
 
             <p class="pdp-desc">${p.description}</p>
 
             <div class="pdp-actions-row">
               <div class="qty-counter">
-                <button class="qty-btn" onclick="let q = document.getElementById('pdpQty'); q.textContent = Math.max(1, parseInt(q.textContent) - 1);">-</button>
+                <button class="qty-btn" aria-label="Decrease quantity" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="let q = document.getElementById('pdpQty'); q.textContent = Math.max(1, parseInt(q.textContent) - 1);">-</button>
                 <span id="pdpQty" class="qty-display">1</span>
-                <button class="qty-btn" onclick="let q = document.getElementById('pdpQty'); q.textContent = Math.min(${p.stockCount}, parseInt(q.textContent) + 1);">+</button>
+                <button class="qty-btn" aria-label="Increase quantity" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="let q = document.getElementById('pdpQty'); q.textContent = Math.min(${p.stockCount}, parseInt(q.textContent) + 1);">+</button>
               </div>
 
-              <button class="btn btn-primary btn-lg" style="flex-grow: 1;" onclick="App.handlePDPAddToCart('${p.id}')">
+              <button class="btn btn-primary btn-lg" style="flex-grow: 1;" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="App.handlePDPAddToCart('${p.id}')">
                 Add to Atelier Bag
               </button>
 
@@ -413,7 +436,7 @@ const App = {
               </button>
             </div>
 
-            <button class="btn btn-secondary btn-block" style="margin-bottom: 1.5rem;" onclick="App.handlePDPAddToCart('${p.id}'); window.location.hash = '#/checkout';">
+            <button class="btn btn-secondary btn-block" style="margin-bottom: 1.5rem;" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="if (App.handlePDPAddToCart('${p.id}')) window.location.hash = '#/checkout';">
               Instant Buy Now
             </button>
 
@@ -508,10 +531,12 @@ const App = {
     const p = this.productsCache.find(x => x.id === productId);
     const qty = parseInt(document.getElementById('pdpQty')?.textContent) || 1;
     if (p) {
-      State.addToCart(p, qty);
+      if (!State.addToCart(p, qty)) return false;
       CartUI.openDrawer();
       window.showToast(`Added ${qty}× "${p.name}" to bag`, 'success');
+      return true;
     }
+    return false;
   },
 
   // QUICK VIEW MODAL
@@ -544,7 +569,7 @@ const App = {
                 <strong>Materials:</strong> ${p.materials}
               </div>
               <div style="margin-top: auto; display: flex; gap: 0.75rem;">
-                <button class="btn btn-primary btn-block" onclick="State.addToCart({ id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, image: '${p.image}', category: '${p.category}' }); document.getElementById('quickViewModal').classList.remove('open'); CartUI.openDrawer();">
+                <button class="btn btn-primary btn-block" ${p.stockCount <= 0 ? 'disabled' : ''} onclick="State.addToCart({ id: '${p.id}', name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, image: '${p.image}', category: '${p.category}', stockCount: ${p.stockCount} }); document.getElementById('quickViewModal').classList.remove('open'); CartUI.openDrawer();">
                   Add to Atelier Bag
                 </button>
               </div>

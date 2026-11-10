@@ -88,9 +88,17 @@ const State = {
   },
 
   addToCart(product, quantity = 1) {
+    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const stockCount = Number.isFinite(Number(product.stockCount))
+      ? Math.max(0, Math.floor(Number(product.stockCount)))
+      : Infinity;
+    if (stockCount === 0) return false;
+
     const existingIndex = this.cart.findIndex(i => i.id === product.id);
     if (existingIndex > -1) {
-      this.cart[existingIndex].quantity += quantity;
+      const currentQuantity = this.cart[existingIndex].quantity || 1;
+      this.cart[existingIndex].quantity = Math.min(stockCount, currentQuantity + requestedQuantity);
+      if (Number.isFinite(stockCount)) this.cart[existingIndex].stockCount = stockCount;
     } else {
       this.cart.push({
         id: product.id,
@@ -98,11 +106,13 @@ const State = {
         price: product.price,
         image: product.image,
         category: product.category,
-        quantity: quantity
+        quantity: Math.min(stockCount, requestedQuantity),
+        ...(Number.isFinite(stockCount) ? { stockCount } : {})
       });
     }
     this.saveCart();
     this.emit('cart:updated', this.cart);
+    return true;
   },
 
   updateCartQuantity(productId, quantity) {
@@ -111,7 +121,15 @@ const State = {
       if (quantity <= 0) {
         this.cart.splice(idx, 1);
       } else {
-        this.cart[idx].quantity = quantity;
+        const normalizedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+        const stockCount = Number.isFinite(Number(this.cart[idx].stockCount))
+          ? Math.max(0, Math.floor(Number(this.cart[idx].stockCount)))
+          : Infinity;
+        if (stockCount === 0) {
+          this.cart.splice(idx, 1);
+        } else {
+          this.cart[idx].quantity = Math.min(stockCount, normalizedQuantity);
+        }
       }
       this.saveCart();
       this.emit('cart:updated', this.cart);

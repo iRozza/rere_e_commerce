@@ -56,6 +56,7 @@ const CartUI = {
   renderDrawer() {
     const itemsContainer = document.getElementById('drawerCartItems');
     const subtotalEl = document.getElementById('drawerSubtotal');
+    const countTag = document.getElementById('drawerCountTag');
     const freeShippingProgress = document.getElementById('freeShippingProgress');
     const freeShippingText = document.getElementById('freeShippingText');
     const checkoutBtn = document.getElementById('drawerCheckoutBtn');
@@ -66,6 +67,8 @@ const CartUI = {
     const subtotal = State.getCartSubtotal();
     const freeShippingGoal = 50.0;
     const remainingForFreeShipping = Math.max(0, freeShippingGoal - subtotal);
+
+    if (countTag) countTag.textContent = `${count} ${count === 1 ? 'piece' : 'pieces'}`;
 
     // Free shipping progress
     if (freeShippingProgress && freeShippingText) {
@@ -120,11 +123,11 @@ const CartUI = {
           <div class="cart-item-price">${State.formatPrice(item.price)}</div>
           <div class="cart-item-controls">
             <div class="qty-counter" style="scale: 0.85; transform-origin: left center;">
-              <button class="qty-btn" onclick="State.updateCartQuantity('${item.id}', ${item.quantity - 1})">-</button>
+              <button class="qty-btn" aria-label="Decrease quantity of ${item.name.replace(/"/g, '&quot;')}" onclick="State.updateCartQuantity('${item.id}', ${item.quantity - 1})">-</button>
               <span class="qty-display">${item.quantity}</span>
-              <button class="qty-btn" onclick="State.updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
+              <button class="qty-btn" aria-label="Increase quantity of ${item.name.replace(/"/g, '&quot;')}" ${item.stockCount && item.quantity >= item.stockCount ? 'disabled' : ''} onclick="State.updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
             </div>
-            <button class="cart-item-remove" onclick="State.removeFromCart('${item.id}')">Remove</button>
+            <button class="cart-item-remove" aria-label="Remove ${item.name.replace(/"/g, '&quot;')} from bag" onclick="State.removeFromCart('${item.id}')">Remove</button>
           </div>
         </div>
       </div>
